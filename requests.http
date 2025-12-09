@@ -1,0 +1,11 @@
+### Проверка сервера
+GET http://localhost:8080
+
+### Регистрация
+POST http://localhost:8080/register
+Content-Type: application/json
+
+{
+  "email": "user_5@kino.local",
+  "password": "1234"
+}
