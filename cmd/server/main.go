@@ -37,6 +37,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", homeHandler) // ← добавили!
 	mux.HandleFunc("POST /register", handlers.Register(userStorage))
+	mux.HandleFunc("POST /login", handlers.Login(userStorage))
 
 	log.Println("Server started on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))

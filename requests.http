@@ -5,7 +5,11 @@ GET http://localhost:8080
 POST http://localhost:8080/register
 Content-Type: application/json
 
+### Логин
+POST http://localhost:8080/login
+Content-Type: application/json
+
 {
-  "email": "user_5@kino.local",
+  "email": "user_7@kino.local",
   "password": "1234"
 }
