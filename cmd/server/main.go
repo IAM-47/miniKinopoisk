@@ -33,11 +33,19 @@ func main() {
 	defer db.Close()
 
 	userStorage := storage.NewUserStorage(db)
+	movieStorage := storage.NewMovieStorage(db)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", homeHandler) // ← добавили!
+	// Пользователи
 	mux.HandleFunc("POST /register", handlers.Register(userStorage))
 	mux.HandleFunc("POST /login", handlers.Login(userStorage))
+
+	// Фильмы
+	mux.HandleFunc("POST /movies", handlers.CreateMovie(movieStorage))
+	mux.HandleFunc("GET /movies", handlers.GetMovies(movieStorage))
+	mux.HandleFunc("PUT /movies/{id}", handlers.UpdateMovie(movieStorage))
+	mux.HandleFunc("DELETE /movies/{id}", handlers.DeleteMovie(movieStorage))
 
 	log.Println("Server started on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))

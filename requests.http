@@ -5,6 +5,11 @@ GET http://localhost:8080
 POST http://localhost:8080/register
 Content-Type: application/json
 
+{
+  "email": "user_10@kino.local",
+  "password": "1234"
+}
+
 ### Логин
 POST http://localhost:8080/login
 Content-Type: application/json
@@ -13,3 +18,32 @@ Content-Type: application/json
   "email": "user_7@kino.local",
   "password": "1234"
 }
+
+### Создание фильма
+POST http://localhost:8080/movies
+Content-Type: application/json
+
+{
+    "title": "Lord of The Rings",
+    "producer": "Barrie M. Osborne",
+    "director": "Peter Jackson",
+    "release_year": 2001
+}
+
+### Чтение
+GET http://localhost:8080/movies
+
+### Редактирование фильма
+PUT http://localhost:8080/movies/1
+Content-Type: application/json
+
+{
+  "title": "Lord of The Rings: Brotherhood of the ring",
+  "producer": "Barrie M. Osborne",
+  "director": "Peter Jackson",
+  "release_year": 2001
+}
+
+
+### Удалить фильм (ID = 3)
+DELETE http://localhost:8080/movies/4
