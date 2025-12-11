@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"log"
+	"miniKinopoisk/internal/auth"
 	"miniKinopoisk/internal/storage"
 	"miniKinopoisk/internal/utils"
 	"net/http"
@@ -49,7 +50,10 @@ func Register(userStorage *storage.UserStorage) http.HandlerFunc {
 
 func Login(userStorage *storage.UserStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req RegisterRequest
+		var req struct {
+			Email    string `json:"email"`
+			Password string `json:"password"`
+		}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, "Invalid JSON", http.StatusBadRequest)
 			return
@@ -71,14 +75,15 @@ func Login(userStorage *storage.UserStorage) http.HandlerFunc {
 			return
 		}
 
+		token, err := auth.GenerateToken(user.ID, user.Email, user.Role)
+		if err != nil {
+			http.Error(w, "Something went wrong", http.StatusInternalServerError)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"message": "Logged in successfully",
-			"user": map[string]interface{}{
-				"id":    user.ID,
-				"email": user.Email,
-				"role":  user.Role,
-			},
+		json.NewEncoder(w).Encode(map[string]string{
+			"token": token,
 		})
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"miniKinopoisk/internal/middleware"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -42,11 +43,11 @@ func main() {
 	mux.HandleFunc("POST /login", handlers.Login(userStorage))
 
 	// Фильмы
-	mux.HandleFunc("POST /movies", handlers.CreateMovie(movieStorage))
+	mux.HandleFunc("POST /movies", middleware.AuthMiddleware(middleware.AdminOnly(handlers.CreateMovie(movieStorage))))
+	mux.HandleFunc("PUT /movies/{id}", middleware.AuthMiddleware(middleware.AdminOnly(handlers.UpdateMovie(movieStorage))))
+	mux.HandleFunc("DELETE /movies/{id}", middleware.AuthMiddleware(middleware.AdminOnly(handlers.DeleteMovie(movieStorage))))
+	/// Читать могут все
 	mux.HandleFunc("GET /movies", handlers.GetMovies(movieStorage))
-	mux.HandleFunc("PUT /movies/{id}", handlers.UpdateMovie(movieStorage))
-	mux.HandleFunc("DELETE /movies/{id}", handlers.DeleteMovie(movieStorage))
-
 	log.Println("Server started on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
