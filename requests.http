@@ -1,3 +1,8 @@
+//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxOCwiZW1haWwiOiJhZG1pbl8yQGtpbm8ubG9jYWwiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NjU2NTI3NTh9.HWxAMP4CPu-RxeB7R8NYEynw0GsrnOWKEnLyIue3JSA
+// Admin
+//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxNCwiZW1haWwiOiJ1c2VyXzdAa2luby5sb2NhbCIsInJvbGUiOiJ1c2VyIiwiZXhwIjoxNzY1NjUzNTgxfQ.XXqCb1be63kkyRSMjG_lyljp8ooYJ2N5HrGIrHQwB_E
+// User
+
 ### Проверка сервера
 GET http://localhost:8080
 
@@ -10,7 +15,7 @@ Content-Type: application/json
   "password": "1234"
 }
 
-### Логин (пароль админа_2 1234)
+### Логин_Пользователь
 POST http://localhost:8080/login
 Content-Type: application/json
 
@@ -19,9 +24,18 @@ Content-Type: application/json
   "password": "1234"
 }
 
+### Логин_Админ
+POST http://localhost:8080/login
+Content-Type: application/json
+
+{
+  "email": "admin_2@kino.local",
+  "password": "1234"
+}
+
 ### Создание фильма
 POST http://localhost:8080/movies
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxNCwiZW1haWwiOiJ1c2VyXzdAa2luby5sb2NhbCIsInJvbGUiOiJ1c2VyIiwiZXhwIjoxNzY1NTY3OTAxfQ._3J9M_g3Wb_vnGKdTvEcgnkfF6z-tomQhPn716ZVNSc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxOCwiZW1haWwiOiJhZG1pbl8yQGtpbm8ubG9jYWwiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NjU2NTI3NTh9.HWxAMP4CPu-RxeB7R8NYEynw0GsrnOWKEnLyIue3JSA
 Content-Type: application/json
 
 {
@@ -31,12 +45,12 @@ Content-Type: application/json
     "release_year": 2002
 }
 
-### Чтение
+### Посмотреть список фильмов
 GET http://localhost:8080/movies
 
 ### Редактирование фильма
 PUT http://localhost:8080/movies/1
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxNCwiZW1haWwiOiJ1c2VyXzdAa2luby5sb2NhbCIsInJvbGUiOiJ1c2VyIiwiZXhwIjoxNzY1NTY3OTAxfQ._3J9M_g3Wb_vnGKdTvEcgnkfF6z-tomQhPn716ZVNSc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxOCwiZW1haWwiOiJhZG1pbl8yQGtpbm8ubG9jYWwiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NjU2NTI3NTh9.HWxAMP4CPu-RxeB7R8NYEynw0GsrnOWKEnLyIue3JSA
 Content-Type: application/json
 
 {
@@ -49,4 +63,77 @@ Content-Type: application/json
 
 ### Удалить фильм (ID = 2)
 DELETE http://localhost:8080/movies/2
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxOCwiZW1haWwiOiJhZG1pbl8yQGtpbm8ubG9jYWwiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NjU2NTI3NTh9.HWxAMP4CPu-RxeB7R8NYEynw0GsrnOWKEnLyIue3JSA
+
+
+### Создание актера
+POST http://localhost:8080/actors
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxNCwiZW1haWwiOiJ1c2VyXzdAa2luby5sb2NhbCIsInJvbGUiOiJ1c2VyIiwiZXhwIjoxNzY1NTY3OTAxfQ._3J9M_g3Wb_vnGKdTvEcgnkfF6z-tomQhPn716ZVNSc
+Content-Type: application/json
+
+{
+  "first_name": "Viggo",
+  "last_name": "Mortensen",
+  "birth_date": "1958-10-20",
+  "salary": 1500000.00
+}
+
+
+### Редактирование актера
+PUT http://localhost:8080/actors/3
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxNCwiZW1haWwiOiJ1c2VyXzdAa2luby5sb2NhbCIsInJvbGUiOiJ1c2VyIiwiZXhwIjoxNzY1NjUzNTgxfQ.XXqCb1be63kkyRSMjG_lyljp8ooYJ2N5HrGIrHQwB_E
+Content-Type: application/json
+
+{
+  "first_name": "Viggo",
+  "last_name": "Mortensen",
+  "birth_date": "1958-10-20",
+  "salary": 2500000.90
+}
+
+
+### Удалить актера (ID = 2)
+DELETE http://localhost:8080/actors/2
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxOCwiZW1haWwiOiJhZG1pbl8yQGtpbm8ubG9jYWwiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NjU2NTI3NTh9.HWxAMP4CPu-RxeB7R8NYEynw0GsrnOWKEnLyIue3JSA
+
+### Привязать актера к фильму (m2, a1)
+POST http://localhost:8080/movies/2/actors
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxOCwiZW1haWwiOiJhZG1pbl8yQGtpbm8ubG9jYWwiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NjU2NTI3NTh9.HWxAMP4CPu-RxeB7R8NYEynw0GsrnOWKEnLyIue3JSA
+Content-Type: application/json
+
+{
+  "actor_id": 3
+}
+
+### Посмотреть бюджет к фильму
+GET http://localhost:8080/movies/{2}/budget
+
+### Создание бюджета
+POST http://localhost:8080/movies/{2}/budget
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxNCwiZW1haWwiOiJ1c2VyXzdAa2luby5sb2NhbCIsInJvbGUiOiJ1c2VyIiwiZXhwIjoxNzY1NTY3OTAxfQ._3J9M_g3Wb_vnGKdTvEcgnkfF6z-tomQhPn716ZVNSc
+Content-Type: application/json
+
+{
+  "id_movie": "2",
+  "total_budget": 100000000.00,
+  "fees_in_prod_country": 344000000,
+  "fees_in_other": 606000000.00
+}
+
+
+### Редактирование бюджета (общий бюджет)
+PUT http://localhost:8080/movies/{2}/budget
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxNCwiZW1haWwiOiJ1c2VyXzdAa2luby5sb2NhbCIsInJvbGUiOiJ1c2VyIiwiZXhwIjoxNzY1NjUzNTgxfQ.XXqCb1be63kkyRSMjG_lyljp8ooYJ2N5HrGIrHQwB_E
+Content-Type: application/json
+
+{
+  "id_movie": "2",
+  "total_budget": 94000000.00,
+  "fees_in_prod_country": 344000000,
+  "fees_in_other": 606000000.00
+}
+
+
+### Удалить информацию о бюджете и сборах (ID = 2)
+DELETE http://localhost:8080/budget/2
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxOCwiZW1haWwiOiJhZG1pbl8yQGtpbm8ubG9jYWwiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NjU2NTI3NTh9.HWxAMP4CPu-RxeB7R8NYEynw0GsrnOWKEnLyIue3JSA
