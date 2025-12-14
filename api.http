@@ -1,0 +1,146 @@
+### Логин админа и сохранение токена
+# @name loginAdmin
+POST http://localhost:8080/login
+Content-Type: application/json
+
+{
+  "email": "admin_2@kino.local",
+  "password": "1234"
+}
+
+### ================================================
+### Проверка сервера
+GET http://localhost:8080
+
+### Посмотреть список фильмов
+GET http://localhost:8080/movies
+
+### Посмотреть список актеров к конкретному фильму
+GET http://localhost:8080/movies/2/actors
+
+### Посмотреть бюджет к фильму
+GET http://localhost:8080/movies/2/budget
+### ================================================
+
+### ================================================
+### Регистрация
+POST http://localhost:8080/register
+Content-Type: application/json
+
+{
+  "email": "USER_47@kino.local",
+  "password": "1234"
+}
+
+
+### Логин_Пользователь
+POST http://localhost:8080/login
+Content-Type: application/json
+
+{
+  "email": "user_7@kino.local",
+  "password": "1234"
+}
+### ================================================
+
+### Создание фильма
+# @no-redirect
+POST http://localhost:8080/movies
+Authorization: Bearer {{ADMIN_TOKEN}}
+Content-Type: application/json
+
+{
+  "title": "Game of Thrones",
+  "producer": "Brian kirk",
+  "director": "David Benioff",
+  "release_year": 2011
+}
+
+
+### Редактирование фильма
+PUT http://localhost:8080/movies/13
+Authorization: Bearer {{ADMIN_TOKEN}}
+Content-Type: application/json
+
+{
+  "title": "Game of Thrones",
+  "producer": "David Benioff",
+  "director": "Brian Kirk",
+  "release_year": 2011
+}
+
+
+### Удалить фильм
+DELETE http://localhost:8080/movies/13
+Authorization: Bearer {{ADMIN_TOKEN}}
+### ================================================
+
+### Создание актера
+POST http://localhost:8080/actors
+Authorization: Bearer {{ADMIN_TOKEN}}
+Content-Type: application/json
+
+{
+  "first_name": "Emilia",
+  "last_name": "Clarke",
+  "birth_date": "1986-10-23",
+  "salary": 2500000.00
+}
+
+
+### Редактирование актера
+PUT http://localhost:8080/actors/28
+Authorization: Bearer {{ADMIN_TOKEN}}
+Content-Type: application/json
+
+{
+  "first_name": "Kit",
+  "last_name": "Harington",
+  "birth_date": "1986-12-16",
+  "salary": 1500000.90
+}
+
+### Привязать актера к фильму
+POST http://localhost:8080/movies/13/actors
+Authorization: Bearer {{ADMIN_TOKEN}}
+Content-Type: application/json
+
+{
+  "actor_id": 28
+}
+
+### Удалить актера
+DELETE http://localhost:8080/actors/28
+Authorization: Bearer {{ADMIN_TOKEN}}
+### ================================================
+
+### Создание бюджета
+POST http://localhost:8080/movies/13/budget
+Authorization: Bearer {{ADMIN_TOKEN}}
+Content-Type: application/json
+
+{
+  "id_movie": "13",
+  "total_budget": 69000000.00,
+  "fees_in_prod_country": 3800000.00,
+  "fees_in_other": 22000000.00
+}
+
+
+### Редактирование бюджета
+PUT http://localhost:8080/movies/13/budget
+Authorization: Bearer {{ADMIN_TOKEN}}
+Content-Type: application/json
+
+{
+  "id_movie": "13",
+  "total_budget": 60000000.00,
+  "fees_in_prod_country": 2500000.00,
+  "fees_in_other": 15000000.00
+}
+
+
+### Удалить информацию о бюджете и сборах
+DELETE http://localhost:8080/budget/8
+Authorization: Bearer {{ADMIN_TOKEN}}
+

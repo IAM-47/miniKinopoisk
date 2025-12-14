@@ -3,9 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"log"
+	"miniKinopoisk/internal/models"
 	"miniKinopoisk/internal/storage"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -41,7 +43,7 @@ func CreateActor(actorStorage *storage.ActorStorage) http.HandlerFunc {
 
 		actor, err := actorStorage.CreateActor(r.Context(), req.FirstName, req.LastName, birthDate, req.Salary)
 		if err != nil {
-			http.Error(w, "Something wend wrong", http.StatusInternalServerError)
+			http.Error(w, "Something went wrong", http.StatusInternalServerError)
 			return
 		}
 
@@ -51,12 +53,27 @@ func CreateActor(actorStorage *storage.ActorStorage) http.HandlerFunc {
 	}
 }
 
-func GetActors(actorStorage *storage.ActorStorage) http.HandlerFunc {
+func GetActorsByMovie(actorStorage *storage.ActorStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		actors, err := actorStorage.GetActors(r.Context())
-		if err != nil {
-			http.Error(w, "Something wend wrong", http.StatusInternalServerError)
+		movieIDStr := r.PathValue("id")
+		if movieIDStr == "" {
+			http.Error(w, "Something went wrong", http.StatusInternalServerError)
 			return
+		}
+		movieID, err := strconv.Atoi(movieIDStr)
+		if err != nil {
+			http.Error(w, "Something went wrong"+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		actors, err := actorStorage.GetActorsByMovie(r.Context(), movieID)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				actors = []*models.Actor{}
+			} else {
+				http.Error(w, "Something went wrong!"+err.Error(), http.StatusInternalServerError)
+				return
+			}
 		}
 
 		w.Header().Set("Content-Type", "application/json")
@@ -91,7 +108,7 @@ func AddActorToMovie(actorStorage *storage.ActorStorage) http.HandlerFunc {
 			return
 		}
 		if err := actorStorage.AddActorToMovie(r.Context(), movieID, req.ActorID); err != nil {
-			http.Error(w, "Something wend wrong", http.StatusInternalServerError)
+			http.Error(w, "Something went wrong", http.StatusInternalServerError)
 			return
 		}
 
@@ -140,7 +157,7 @@ func UpdateActor(actorStorage *storage.ActorStorage) http.HandlerFunc {
 
 		actor, err := actorStorage.UpdateActor(r.Context(), id, req.FirstName, req.LastName, birthDate, req.Salary)
 		if err != nil {
-			log.Printf("Something wend wrong, %v", err)
+			log.Printf("Something went wrong, %v", err)
 			http.Error(w, "Error updating actor: "+err.Error(), http.StatusInternalServerError)
 			return
 		}

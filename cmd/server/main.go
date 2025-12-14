@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"miniKinopoisk/internal/app"
 	"miniKinopoisk/pkg/config"
@@ -11,13 +10,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Mini Kinopoisk API",
-		"status":  "OK",
-	})
-}
 func main() {
 	cfg := config.Load()
 

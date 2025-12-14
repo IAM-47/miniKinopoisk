@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-
 	"miniKinopoisk/internal/handlers"
 	"miniKinopoisk/internal/middleware"
 	"miniKinopoisk/internal/storage"
@@ -25,7 +24,7 @@ func (app *App) RegisterRoutes(mux *http.ServeMux) {
 	actorsStorage := storage.NewActorStorage(app.db)
 	budgetStorage := storage.NewBudgetStorage(app.db)
 
-	mux.HandleFunc("GET /", homeHandler)
+	mux.HandleFunc("GET /", handlers.HomeHandler)
 
 	// Пользватели
 	mux.HandleFunc("POST /register", handlers.Register(userStorage))
@@ -38,7 +37,7 @@ func (app *App) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("DELETE /movies/{id}", middleware.AuthMiddleware(middleware.AdminOnly(handlers.DeleteMovie(moviesStorage))))
 
 	// Актеры
-	//mux.HandleFunc("GET /movies/{id}/actors", handlers.GetActorsByMovie(actorsStorage))
+	mux.HandleFunc("GET /movies/{id}/actors", handlers.GetActorsByMovie(actorsStorage))
 	mux.HandleFunc("POST /actors", middleware.AuthMiddleware(middleware.AdminOnly(handlers.CreateActor(actorsStorage))))
 	mux.HandleFunc("PUT /actors/{id}", middleware.AuthMiddleware(middleware.AdminOnly(handlers.UpdateActor(actorsStorage))))
 	mux.HandleFunc("DELETE /actors/{id}", middleware.AuthMiddleware(middleware.AdminOnly(handlers.DeleteActor(actorsStorage))))

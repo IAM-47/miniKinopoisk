@@ -4,9 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"miniKinopoisk/internal/models"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type ActorStorage struct {
@@ -52,9 +53,14 @@ func (s *ActorStorage) CreateActor(ctx context.Context, firstName, lastName stri
 
 }
 
-func (s *ActorStorage) GetActors(ctx context.Context) ([]*models.Actor, error) {
-	query := `select * from actors;`
-	rows, err := s.db.Query(ctx, query)
+func (s *ActorStorage) GetActorsByMovie(ctx context.Context, movieID int) ([]*models.Actor, error) {
+	query := `
+		select a.id, a.first_name, a.last_name, a.birth_date, a.salary from actors a 
+		join movie_actor ma 
+		on a.id = ma.id_actor 
+		where ma.id_movie = $1;
+		`
+	rows, err := s.db.Query(ctx, query, movieID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get actors: %w", err)
 	}
