@@ -5,6 +5,7 @@
       <array>
         <option value="github.com/pkg/errors" />
         <option value="golang.org/x/net/context" />
+        <option value="html/template" />
       </array>
     </option>
   </component>

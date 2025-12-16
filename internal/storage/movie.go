@@ -3,8 +3,9 @@ package storage
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"miniKinopoisk/internal/models"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type MovieStorage struct {
@@ -58,6 +59,22 @@ func (s *MovieStorage) GetMovies(ctx context.Context) ([]*models.Movie, error) {
 		movies = append(movies, &movie)
 	}
 	return movies, nil
+}
+
+func (s *MovieStorage) GetMovieByID(ctx context.Context, movieID int) (*models.Movie, error) {
+	query := `select * from movies where id = $1;`
+	var movie models.Movie
+	err := s.db.QueryRow(ctx, query, movieID).Scan(
+		&movie.ID,
+		&movie.Title,
+		&movie.Producer,
+		&movie.Director,
+		&movie.ReleaseYear,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &movie, err
 }
 
 func (s *MovieStorage) UpdateMovie(ctx context.Context, id int, title, producer, director string, release_year int) (*models.Movie, error) {

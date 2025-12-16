@@ -12,7 +12,6 @@ import (
 
 func main() {
 	cfg := config.Load()
-
 	db, err := pgxpool.New(context.Background(), cfg.Database.DSN)
 	if err != nil {
 		log.Fatal("DB connect failed:", err)

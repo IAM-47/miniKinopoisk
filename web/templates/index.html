@@ -1,0 +1,13 @@
+{{ define "index.html" }}
+{{ template "base" . }}
+{{ end }}
+
+{{ define "content" }}
+<div class="movies">
+    {{ range .Movies }}
+    <div>
+        <a href="/movies/{{ .ID }}">{{ .Title }}</a>
+    </div>
+    {{ end }}
+</div>
+{{ end }}

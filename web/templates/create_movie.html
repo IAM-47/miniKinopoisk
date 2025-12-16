@@ -1,0 +1,28 @@
+{{ define "create_movie.html" }}
+{{ template "base" . }}
+{{ end }}
+
+{{ define "content" }}
+<h2>Добавить новый фильм</h2>
+<form method="POST" action="/movies/create">
+    <div class="form-group">
+        <label for="title">Название</label>
+        <input type="text" id="title" name="title" required>
+    </div>
+    <div class="form-group">
+        <label for="producer">Продюсер</label>
+        <input type="text" id="producer" name="producer" required>
+    </div>
+    <div class="form-group">
+        <label for="director">Режиссёр</label>
+        <input type="text" id="director" name="director" required>
+    </div>
+    <div class="form-group">
+        <label for="release_year">Год выпуска</label>
+        <input type="number" id="release_year" name="release_year" min="1895" max="2025" required>
+    </div>
+    <button type="submit" class="btn">Создать фильм</button>
+</form>
+<br>
+<a href="/">← Отмена</a>
+{{ end }}

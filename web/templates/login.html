@@ -1,0 +1,12 @@
+{{ define "login.html" }}
+{{ template "base" . }}
+{{ end }}
+
+{{ define "content" }}
+<h2>{{ .Title }}</h2>
+<form method="POST" action="{{ .Action }}">
+    <input type="email" name="email" placeholder="Email" required>
+    <input type="password" name="password" placeholder="Пароль" required>
+    <button type="submit">Отправить</button>
+</form>
+{{ end }}

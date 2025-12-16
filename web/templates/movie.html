@@ -1,0 +1,31 @@
+{{ define "movie.html" }}
+{{ template "base" . }}
+{{ end }}
+
+{{ define "content" }}
+<h2>{{ .Movie.Title }}</h2>
+<p><strong>Режиссёр:</strong> {{ .Movie.Director }}</p>
+<p><strong>Продюсер:</strong> {{ .Movie.Producer }}</p>
+<p><strong>Год выпуска:</strong> {{ .Movie.ReleaseYear }}</p>
+
+<h3>Актёры</h3>
+{{ if .Actors }}
+<ul>
+    {{ range .Actors }}
+    <li>{{ .FirstName }} {{ .LastName }}</li>
+    {{ end }}
+</ul>
+{{ else }}
+<p>Актёры не указаны.</p>
+{{ end }}
+
+{{ with .Budget }}
+<h3>Бюджет и сборы</h3>
+<p><strong>Бюджет:</strong> ${{ .TotalBudget }}</p>
+<p><strong>Сборы в стране производства:</strong> ${{ .FeesInProdCountry }}</p>
+<p><strong>Сборы в других странах:</strong> ${{ .FeesInOther }}</p>
+{{ end }}
+
+<br>
+<a href="/">← Назад</a>
+{{ end }}

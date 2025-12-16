@@ -1,0 +1,11 @@
+{{ define "base" }}
+<!DOCTYPE html>
+<html>
+<head><title>Mini Kinopoisk</title></head>
+<body>
+{{ if .User }}Привет, {{ .User.Email }}{{ else }}<a href="/login">Войти</a>{{ end }}
+<hr>
+{{ template "content" . }}
+</body>
+</html>
+{{ end }}

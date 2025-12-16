@@ -16,7 +16,7 @@ func NewBudgetStorage(db *pgxpool.Pool) *BudgetStorage {
 	return &BudgetStorage{db: db}
 }
 
-func (s *BudgetStorage) CreateBudget(ctx context.Context, movieID int, totalBudget, feesInProdCountry, feesinOther float64) (*models.Budget_and_Fees, error) {
+func (s *BudgetStorage) CreateBudget(ctx context.Context, movieID int, totalBudget, feesInProdCountry, feesinOther float64) (*models.BudgetAndFees, error) {
 	query := `
 		insert into budget_and_fees(movieID, total_budget, fees_in_prod_country, fees_in_other)
 		values ($1, $2, $3, $4)
@@ -25,7 +25,7 @@ func (s *BudgetStorage) CreateBudget(ctx context.Context, movieID int, totalBudg
 		returning id, movieID, total_budget, fees_in_prod_country, fees_in_other;
 	`
 
-	var budget models.Budget_and_Fees
+	var budget models.BudgetAndFees
 
 	err := s.db.QueryRow(ctx, query, movieID, totalBudget, feesInProdCountry, feesinOther).Scan(
 		&budget.ID,
@@ -42,10 +42,10 @@ func (s *BudgetStorage) CreateBudget(ctx context.Context, movieID int, totalBudg
 
 }
 
-func (s *BudgetStorage) GetBudgetByMovie(ctx context.Context, movieID int) (*models.Budget_and_Fees, error) {
+func (s *BudgetStorage) GetBudgetByMovie(ctx context.Context, movieID int) (*models.BudgetAndFees, error) {
 	query := `select * from budget_and_fees where id_movie = $1;`
 
-	var budget models.Budget_and_Fees
+	var budget models.BudgetAndFees
 	err := s.db.QueryRow(ctx, query, movieID).Scan(
 		&budget.ID,
 		&budget.IDMovie,
@@ -59,7 +59,7 @@ func (s *BudgetStorage) GetBudgetByMovie(ctx context.Context, movieID int) (*mod
 	return &budget, nil
 }
 
-func (s *BudgetStorage) UpdateBudgetByMovie(ctx context.Context, movieID int, totalBudget, feesInProdCountry, feeInOther float64) (*models.Budget_and_Fees, error) {
+func (s *BudgetStorage) UpdateBudgetByMovie(ctx context.Context, movieID int, totalBudget, feesInProdCountry, feeInOther float64) (*models.BudgetAndFees, error) {
 	query := `
 		update budget_and_fees
 		set total_budget = $2, fees_in_prod_country = $3, fees_in_other = $4
@@ -67,7 +67,7 @@ func (s *BudgetStorage) UpdateBudgetByMovie(ctx context.Context, movieID int, to
 		on conflict (id_movie) do update
 		returning id, total_budget, fees_in_prod_country, fees_in_other;
 	`
-	var budget models.Budget_and_Fees
+	var budget models.BudgetAndFees
 	err := s.db.QueryRow(ctx, query, movieID, totalBudget, feesInProdCountry, feeInOther).Scan(
 		&budget.ID,
 		&budget.IDMovie,
