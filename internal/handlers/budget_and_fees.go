@@ -17,6 +17,16 @@ type createBudgetRequest struct {
 
 func CreateBudget(budgetStorage *storage.BudgetStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		movieIDStr := r.PathValue("id")
+		if movieIDStr == "" {
+			http.Error(w, "Movie ID is required in URL", http.StatusBadRequest)
+			return
+		}
+		movieID, err := strconv.Atoi(movieIDStr)
+		if err != nil {
+			http.Error(w, "Invalid movie ID in URL", http.StatusBadRequest)
+			return
+		}
 		var req createBudgetRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -28,9 +38,9 @@ func CreateBudget(budgetStorage *storage.BudgetStorage) http.HandlerFunc {
 			return
 		}
 
-		budget, err := budgetStorage.CreateBudget(r.Context(), req.IDMovie, req.TotalBudget, req.FeesInProdCountry, req.FeesInOther)
+		budget, err := budgetStorage.CreateBudget(r.Context(), movieID, req.TotalBudget, req.FeesInProdCountry, req.FeesInOther)
 		if err != nil {
-			http.Error(w, "Something wend wrong", http.StatusInternalServerError)
+			http.Error(w, "Something wend wrong "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -86,7 +96,7 @@ func UpdateBudgetByMovie(budgetStorage *storage.BudgetStorage) http.HandlerFunc 
 
 		var req updateBudgetRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, "Invalid request", http.StatusBadRequest)
+			http.Error(w, "Invalid request "+err.Error(), http.StatusBadRequest)
 			return
 		}
 		if req.IDMovie == 0 {

@@ -16,18 +16,18 @@ func NewBudgetStorage(db *pgxpool.Pool) *BudgetStorage {
 	return &BudgetStorage{db: db}
 }
 
-func (s *BudgetStorage) CreateBudget(ctx context.Context, movieID int, totalBudget, feesInProdCountry, feesinOther float64) (*models.Budget_and_Fees, error) {
+func (s *BudgetStorage) CreateBudget(ctx context.Context, movieID int, totalBudget, feesInProdCountry, feesInOther float64) (*models.Budget_and_Fees, error) {
 	query := `
-		insert into budget_and_fees(movieID, total_budget, fees_in_prod_country, fees_in_other)
+		insert into budget_and_fees(id_movie, total_budget, fees_in_prod_country, fees_in_other)
 		values ($1, $2, $3, $4)
 		on conflict (id_movie) do update
 		set total_budget = $2, fees_in_prod_country = $3, fees_in_other = $4
-		returning id, movieID, total_budget, fees_in_prod_country, fees_in_other;
+		returning id, id_movie, total_budget, fees_in_prod_country, fees_in_other;
 	`
 
 	var budget models.Budget_and_Fees
 
-	err := s.db.QueryRow(ctx, query, movieID, totalBudget, feesInProdCountry, feesinOther).Scan(
+	err := s.db.QueryRow(ctx, query, movieID, totalBudget, feesInProdCountry, feesInOther).Scan(
 		&budget.ID,
 		&budget.IDMovie,
 		&budget.TotalBudget,
@@ -64,8 +64,7 @@ func (s *BudgetStorage) UpdateBudgetByMovie(ctx context.Context, movieID int, to
 		update budget_and_fees
 		set total_budget = $2, fees_in_prod_country = $3, fees_in_other = $4
 		where id_movie = $1
-		on conflict (id_movie) do update
-		returning id, total_budget, fees_in_prod_country, fees_in_other;
+		returning id, id_movie, total_budget, fees_in_prod_country, fees_in_other;
 	`
 	var budget models.Budget_and_Fees
 	err := s.db.QueryRow(ctx, query, movieID, totalBudget, feesInProdCountry, feeInOther).Scan(

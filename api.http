@@ -28,7 +28,7 @@ POST http://localhost:8080/register
 Content-Type: application/json
 
 {
-  "email": "USER_47@kino.local",
+  "email": "USER_50@kino.local",
   "password": "1234"
 }
 
@@ -58,7 +58,7 @@ Content-Type: application/json
 
 
 ### Редактирование фильма
-PUT http://localhost:8080/movies/13
+PUT http://localhost:8080/movies/15
 Authorization: Bearer {{ADMIN_TOKEN}}
 Content-Type: application/json
 
@@ -71,7 +71,7 @@ Content-Type: application/json
 
 
 ### Удалить фильм
-DELETE http://localhost:8080/movies/13
+DELETE http://localhost:8080/movies/15
 Authorization: Bearer {{ADMIN_TOKEN}}
 ### ================================================
 
@@ -89,7 +89,7 @@ Content-Type: application/json
 
 
 ### Редактирование актера
-PUT http://localhost:8080/actors/28
+PUT http://localhost:8080/actors/30
 Authorization: Bearer {{ADMIN_TOKEN}}
 Content-Type: application/json
 
@@ -106,11 +106,11 @@ Authorization: Bearer {{ADMIN_TOKEN}}
 Content-Type: application/json
 
 {
-  "actor_id": 28
+  "actor_id": 30
 }
 
 ### Удалить актера
-DELETE http://localhost:8080/actors/28
+DELETE http://localhost:8080/actors/30
 Authorization: Bearer {{ADMIN_TOKEN}}
 ### ================================================
 
@@ -120,7 +120,7 @@ Authorization: Bearer {{ADMIN_TOKEN}}
 Content-Type: application/json
 
 {
-  "id_movie": "13",
+  "id_movie": 13,
   "total_budget": 69000000.00,
   "fees_in_prod_country": 3800000.00,
   "fees_in_other": 22000000.00
@@ -133,7 +133,7 @@ Authorization: Bearer {{ADMIN_TOKEN}}
 Content-Type: application/json
 
 {
-  "id_movie": "13",
+  "id_movie": 13,
   "total_budget": 60000000.00,
   "fees_in_prod_country": 2500000.00,
   "fees_in_other": 15000000.00
@@ -141,6 +141,6 @@ Content-Type: application/json
 
 
 ### Удалить информацию о бюджете и сборах
-DELETE http://localhost:8080/budget/8
+DELETE http://localhost:8080/budget/10
 Authorization: Bearer {{ADMIN_TOKEN}}
 

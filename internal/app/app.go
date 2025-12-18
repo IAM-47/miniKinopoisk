@@ -4,10 +4,11 @@ import (
 	//"context"
 	"net/http"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"miniKinopoisk/internal/handlers"
 	"miniKinopoisk/internal/middleware"
 	"miniKinopoisk/internal/storage"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type App struct {
@@ -46,7 +47,7 @@ func (app *App) RegisterRoutes(mux *http.ServeMux) {
 
 	// Бюджет и сборы
 	mux.HandleFunc("GET /movies/{id}/budget", handlers.GetBudget(budgetStorage))
-	mux.HandleFunc("POST /budget", middleware.AuthMiddleware(middleware.AdminOnly(handlers.CreateBudget(budgetStorage))))
+	mux.HandleFunc("POST /movies/{id}/budget", middleware.AuthMiddleware(middleware.AdminOnly(handlers.CreateBudget(budgetStorage))))
 	mux.HandleFunc("PUT /movies/{id}/budget", middleware.AuthMiddleware(middleware.AdminOnly(handlers.UpdateBudgetByMovie(budgetStorage))))
 	mux.HandleFunc("DELETE /budget/{id}", middleware.AuthMiddleware(middleware.AdminOnly(handlers.DeleteBudget(budgetStorage))))
 }
