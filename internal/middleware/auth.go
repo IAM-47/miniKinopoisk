@@ -2,10 +2,11 @@ package middleware
 
 import (
 	"context"
-	"github.com/golang-jwt/jwt/v5"
 	"miniKinopoisk/internal/auth"
 	"net/http"
 	"strings"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
@@ -18,7 +19,7 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 		if tokenStr == authHeader {
-			http.Error(w, "Invalid authorrization format", http.StatusUnauthorized)
+			http.Error(w, "Invalid authorization format", http.StatusUnauthorized)
 			return
 		}
 
@@ -27,7 +28,7 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return []byte("miniKinopoisk-secret-key"), nil
 		})
 		if err != nil || !token.Valid {
-			http.Error(w, "Invalid authorrization token", http.StatusUnauthorized)
+			http.Error(w, "Invalid authorization token", http.StatusUnauthorized)
 			return
 		}
 

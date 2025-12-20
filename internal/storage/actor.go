@@ -70,7 +70,12 @@ func (s *ActorStorage) GetActorsByMovie(ctx context.Context, movieID int) ([]*mo
 	for rows.Next() {
 		var actor models.Actor
 		var bd sql.NullTime
-		if err := rows.Scan(&actor.ID, &actor.FirstName, &actor.LastName, &bd, &actor.Salary); err != nil {
+		if err := rows.Scan(
+			&actor.ID,
+			&actor.FirstName,
+			&actor.LastName,
+			&bd,
+			&actor.Salary); err != nil {
 			return nil, fmt.Errorf("failed to scan actors: %w", err)
 		}
 		if bd.Valid {
@@ -99,15 +104,21 @@ func (s *ActorStorage) UpdateActor(ctx context.Context, id int, firstName, lastN
 		returning id, first_name, last_name, birth_date, salary;
 	`
 	var actor models.Actor
+	var bd sql.NullTime
 	err := s.db.QueryRow(ctx, query, id, firstName, lastName, birthDate, salary).Scan(
 		&actor.ID,
 		&actor.FirstName,
 		&actor.LastName,
-		&actor.BirthDate,
+		&bd,
 		&actor.Salary,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update actor: %w", err)
+	}
+	if bd.Valid {
+		actor.BirthDate = bd.Time
+	} else {
+		actor.BirthDate = time.Time{}
 	}
 	return &actor, nil
 }

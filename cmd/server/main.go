@@ -12,9 +12,11 @@ import (
 
 func main() {
 	cfg := config.Load()
+	addr := ":" + cfg.Server.Port
 
 	db, err := pgxpool.New(context.Background(), cfg.Database.DSN)
 	if err != nil {
+
 		log.Fatal("DB connect failed:", err)
 	}
 	defer db.Close()
@@ -24,5 +26,5 @@ func main() {
 	application.RegisterRoutes(mux)
 
 	log.Println("Server started on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	log.Fatal(http.ListenAndServe(addr, mux))
 }

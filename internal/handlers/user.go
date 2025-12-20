@@ -44,7 +44,7 @@ func Register(userStorage *storage.UserStorage) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(`{"meessage":"User created successfully!"}`))
+		w.Write([]byte(`{"message":"User created successfully!"}`))
 	}
 }
 
