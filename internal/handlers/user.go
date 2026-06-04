@@ -7,6 +7,7 @@ import (
 	"miniKinopoisk/internal/storage"
 	"miniKinopoisk/internal/utils"
 	"net/http"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgconn"
 )
@@ -25,6 +26,11 @@ func Register(userStorage *storage.UserStorage) http.HandlerFunc {
 		}
 		if req.Email == "" || req.Password == "" {
 			http.Error(w, "Email and password are required", http.StatusBadRequest)
+			return
+		}
+
+		if !strings.Contains(req.Email, "@") {
+			http.Error(w, "Invalid email format", http.StatusBadRequest)
 			return
 		}
 
@@ -84,5 +90,22 @@ func Login(userStorage *storage.UserStorage) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{"token": token})
+	}
+}
+
+func DeleteUserByEmail(userStorage *storage.UserStorage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		email := r.PathValue("email")
+		if email == "" {
+			http.Error(w, "I`m waiting for email", http.StatusBadRequest)
+			return
+		}
+
+		if err := userStorage.DeleteUserByEmail(r.Context(), email); err != nil {
+			log.Printf("DeleteMovie error: %v", err)
+			http.Error(w, "Failed to delete user", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
 	}
 }

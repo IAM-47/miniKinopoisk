@@ -1,6 +1,6 @@
 package models
 
-type Budget_and_Fees struct {
+type BudgetAndFees struct {
 	ID                int     `json:"id"`
 	IDMovie           int     `json:"id_movie"`
 	TotalBudget       float64 `json:"total_budget,omitempty"`

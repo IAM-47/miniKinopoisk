@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"miniKinopoisk/internal/models"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type MovieStorage struct {
@@ -36,9 +37,9 @@ func (s *MovieStorage) CreateMovie(ctx context.Context, title, producer, directo
 	return &movie, nil
 }
 
-func (s *MovieStorage) GetMovies(ctx context.Context) ([]*models.Movie, error) {
-	query := `SELECT id, title, producer, director, release_year FROM movies ORDER BY id;`
-	rows, err := s.db.Query(ctx, query)
+func (s *MovieStorage) GetMovies(ctx context.Context, limit, offset int) ([]*models.Movie, error) {
+	query := `SELECT id, title, producer, director, release_year FROM movies ORDER BY id LIMIT $1 OFFSET $2;`
+	rows, err := s.db.Query(ctx, query, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get movies: %w", err)
 	}

@@ -42,7 +42,19 @@ func CreateMovie(movieStorage *storage.MovieStorage) http.HandlerFunc {
 
 func GetMovies(movieStorage *storage.MovieStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		movies, err := movieStorage.GetMovies(r.Context())
+		limit := 10
+		offset := 0
+		if l := r.URL.Query().Get("limit"); l != "" {
+			if v, err := strconv.Atoi(l); err == nil && v > 0 {
+				limit = v
+			}
+		}
+		if o := r.URL.Query().Get("offset"); o != "" {
+			if v, err := strconv.Atoi(o); err == nil && v >= 0 {
+				offset = v
+			}
+		}
+		movies, err := movieStorage.GetMovies(r.Context(), limit, offset)
 		if err != nil {
 			log.Printf("GetMovies error: %v", err)
 			http.Error(w, "Failed to get movies", http.StatusInternalServerError)

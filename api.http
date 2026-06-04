@@ -16,10 +16,10 @@ GET http://localhost:8080
 GET http://localhost:8080/movies
 
 ### Посмотреть список актеров к конкретному фильму
-GET http://localhost:8080/movies/2/actors
+GET http://localhost:8080/movies/1/actors
 
 ### Посмотреть бюджет к фильму
-GET http://localhost:8080/movies/2/budget
+GET http://localhost:8080/movies/1/budget
 ### ================================================
 
 ### ================================================
@@ -28,7 +28,7 @@ POST http://localhost:8080/register
 Content-Type: application/json
 
 {
-  "email": "USER_50@kino.local",
+  "email": "USER_51@kino.local",
   "password": "1234"
 }
 
@@ -38,9 +38,14 @@ POST http://localhost:8080/login
 Content-Type: application/json
 
 {
-  "email": "user_7@kino.local",
+  "email": "USER_50@kino.local",
   "password": "1234"
 }
+
+
+### Удаление Пользователя по Email
+DELETE http://localhost:8080/users/{{USER_EMAIL}}
+Authorization: Bearer {{ADMIN_TOKEN}}
 ### ================================================
 
 ### Создание фильма
@@ -120,7 +125,7 @@ Authorization: Bearer {{ADMIN_TOKEN}}
 Content-Type: application/json
 
 {
-  "id_movie": 13,
+  "id_movie": 1,
   "total_budget": 69000000.00,
   "fees_in_prod_country": 3800000.00,
   "fees_in_other": 22000000.00

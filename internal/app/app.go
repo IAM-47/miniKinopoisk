@@ -29,6 +29,7 @@ func (app *App) RegisterRoutes(mux *http.ServeMux) {
 	// Пользователи
 	mux.HandleFunc("POST /register", handlers.Register(userStorage))
 	mux.HandleFunc("POST /login", handlers.Login(userStorage))
+	mux.HandleFunc("DELETE /users/{email}", middleware.AuthMiddleware(middleware.AdminOnly(handlers.DeleteUserByEmail(userStorage))))
 
 	// Фильмы
 	mux.HandleFunc("GET /movies", handlers.GetMovies(moviesStorage))

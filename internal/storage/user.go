@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"miniKinopoisk/internal/models"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -46,4 +47,13 @@ func (s *UserStorage) GetUserByEmail(ctx context.Context, email string) (*models
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (s *UserStorage) DeleteUserByEmail(ctx context.Context, email string) error {
+	query := `DELETE FROM users WHERE email = $1;`
+	_, err := s.db.Exec(ctx, query, email)
+	if err != nil {
+		return fmt.Errorf("failed to delete user: %w", err)
+	}
+	return nil
 }
