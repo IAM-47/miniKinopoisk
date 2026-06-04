@@ -3,47 +3,52 @@ package handlers
 import (
 	"encoding/json"
 	"log"
-	"miniKinopoisk/internal/models"
 	"miniKinopoisk/internal/storage"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 )
 
-type createActorRequest struct {
+type actorRequest struct {
 	FirstName string  `json:"first_name"`
 	LastName  string  `json:"last_name"`
 	BirthDate *string `json:"birth_date,omitempty"`
 	Salary    float64 `json:"salary,omitempty"`
 }
 
+func parseBirthDate(raw *string) (*time.Time, error) {
+	if raw == nil {
+		return nil, nil
+	}
+	t, err := time.Parse("2006-01-02", *raw)
+	if err != nil {
+		return nil, err
+	}
+	return &t, nil
+}
+
 func CreateActor(actorStorage *storage.ActorStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req createActorRequest
+		var req actorRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
-
 		if req.FirstName == "" || req.LastName == "" {
-			http.Error(w, "First Name and Last Name are required", http.StatusBadRequest)
+			http.Error(w, "First name and last name are required", http.StatusBadRequest)
 			return
 		}
 
-		var birthDate *time.Time
-		if req.BirthDate != nil {
-			t, err := time.Parse("2006-01-02", *req.BirthDate)
-			if err != nil {
-				http.Error(w, "invalid date format, needed yyyy-mm-dd", http.StatusBadRequest)
-				return
-			}
-			birthDate = &t
+		birthDate, err := parseBirthDate(req.BirthDate)
+		if err != nil {
+			http.Error(w, "Invalid date format, use yyyy-mm-dd", http.StatusBadRequest)
+			return
 		}
 
 		actor, err := actorStorage.CreateActor(r.Context(), req.FirstName, req.LastName, birthDate, req.Salary)
 		if err != nil {
-			http.Error(w, "Something went wrong", http.StatusInternalServerError)
+			log.Printf("CreateActor error: %v", err)
+			http.Error(w, "Failed to create actor", http.StatusInternalServerError)
 			return
 		}
 
@@ -56,24 +61,17 @@ func CreateActor(actorStorage *storage.ActorStorage) http.HandlerFunc {
 func GetActorsByMovie(actorStorage *storage.ActorStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		movieIDStr := r.PathValue("id")
-		if movieIDStr == "" {
-			http.Error(w, "Something went wrong", http.StatusInternalServerError)
-			return
-		}
 		movieID, err := strconv.Atoi(movieIDStr)
 		if err != nil {
-			http.Error(w, "Something went wrong"+err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Invalid movie ID", http.StatusBadRequest)
 			return
 		}
 
 		actors, err := actorStorage.GetActorsByMovie(r.Context(), movieID)
 		if err != nil {
-			if strings.Contains(err.Error(), "not found") {
-				actors = []*models.Actor{}
-			} else {
-				http.Error(w, "Something went wrong!"+err.Error(), http.StatusInternalServerError)
-				return
-			}
+			log.Printf("GetActorsByMovie error: %v", err)
+			http.Error(w, "Failed to get actors", http.StatusInternalServerError)
+			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
@@ -88,10 +86,6 @@ type addActorToMovieRequest struct {
 func AddActorToMovie(actorStorage *storage.ActorStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		movieIDStr := r.PathValue("id")
-		if movieIDStr == "" {
-			http.Error(w, "Movie ID is required", http.StatusBadRequest)
-			return
-		}
 		movieID, err := strconv.Atoi(movieIDStr)
 		if err != nil {
 			http.Error(w, "Invalid movie ID", http.StatusBadRequest)
@@ -100,15 +94,17 @@ func AddActorToMovie(actorStorage *storage.ActorStorage) http.HandlerFunc {
 
 		var req addActorToMovieRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
 		if req.ActorID <= 0 {
-			http.Error(w, "Invalid actorID", http.StatusBadRequest)
+			http.Error(w, "Invalid actor_id", http.StatusBadRequest)
 			return
 		}
+
 		if err := actorStorage.AddActorToMovie(r.Context(), movieID, req.ActorID); err != nil {
-			http.Error(w, "Something went wrong", http.StatusInternalServerError)
+			log.Printf("AddActorToMovie error: %v", err)
+			http.Error(w, "Failed to link actor to movie", http.StatusInternalServerError)
 			return
 		}
 
@@ -116,49 +112,35 @@ func AddActorToMovie(actorStorage *storage.ActorStorage) http.HandlerFunc {
 	}
 }
 
-type updateActorRequest struct {
-	FirstName string  `json:"first_name"`
-	LastName  string  `json:"last_name"`
-	BirthDate *string `json:"birth_date,omitempty"`
-	Salary    float64 `json:"salary,omitempty"`
-}
-
 func UpdateActor(actorStorage *storage.ActorStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id_str := r.PathValue("id")
-		if id_str == "" {
-			http.Error(w, "Actor ID is required", http.StatusBadRequest)
-			return
-		}
-		id, err := strconv.Atoi(id_str)
+		idStr := r.PathValue("id")
+		id, err := strconv.Atoi(idStr)
 		if err != nil {
 			http.Error(w, "Invalid actor ID", http.StatusBadRequest)
 			return
 		}
 
-		var req updateActorRequest
+		var req actorRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, "Invalid request", http.StatusBadRequest)
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
 		if req.FirstName == "" || req.LastName == "" {
-			http.Error(w, "FirstName, Lastname are required", http.StatusBadRequest)
+			http.Error(w, "First name and last name are required", http.StatusBadRequest)
 			return
 		}
-		var birthDate *time.Time
-		if req.BirthDate != nil {
-			t, err := time.Parse("2006-01-02", *req.BirthDate)
-			if err != nil {
-				http.Error(w, "Invalid date format, use yyyy-mm-dd", http.StatusBadRequest)
-				return
-			}
-			birthDate = &t
+
+		birthDate, err := parseBirthDate(req.BirthDate)
+		if err != nil {
+			http.Error(w, "Invalid date format, use yyyy-mm-dd", http.StatusBadRequest)
+			return
 		}
 
 		actor, err := actorStorage.UpdateActor(r.Context(), id, req.FirstName, req.LastName, birthDate, req.Salary)
 		if err != nil {
-			log.Printf("Something went wrong, %v", err)
-			http.Error(w, "Error updating actor: "+err.Error(), http.StatusInternalServerError)
+			log.Printf("UpdateActor error: %v", err)
+			http.Error(w, "Failed to update actor", http.StatusInternalServerError)
 			return
 		}
 
@@ -169,19 +151,16 @@ func UpdateActor(actorStorage *storage.ActorStorage) http.HandlerFunc {
 
 func DeleteActor(actorStorage *storage.ActorStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id_str := r.PathValue("id")
-		if id_str == "" {
-			http.Error(w, "Actor ID is required", http.StatusBadRequest)
-			return
-		}
-		id, err := strconv.Atoi(id_str)
+		idStr := r.PathValue("id")
+		id, err := strconv.Atoi(idStr)
 		if err != nil {
 			http.Error(w, "Invalid actor ID", http.StatusBadRequest)
 			return
 		}
 
 		if err := actorStorage.DeleteActor(r.Context(), id); err != nil {
-			http.Error(w, "Error deleting actor", http.StatusInternalServerError)
+			log.Printf("DeleteActor error: %v", err)
+			http.Error(w, "Failed to delete actor", http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)

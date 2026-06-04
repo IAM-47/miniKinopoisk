@@ -1,7 +1,6 @@
 package app
 
 import (
-	//"context"
 	"net/http"
 
 	"miniKinopoisk/internal/handlers"
@@ -27,22 +26,22 @@ func (app *App) RegisterRoutes(mux *http.ServeMux) {
 
 	mux.HandleFunc("GET /", handlers.HomeHandler)
 
-	// Пользватели
+	// Пользователи
 	mux.HandleFunc("POST /register", handlers.Register(userStorage))
 	mux.HandleFunc("POST /login", handlers.Login(userStorage))
 
 	// Фильмы
 	mux.HandleFunc("GET /movies", handlers.GetMovies(moviesStorage))
+	mux.HandleFunc("GET /movies/{id}", handlers.GetMovieByID(moviesStorage))
 	mux.HandleFunc("POST /movies", middleware.AuthMiddleware(middleware.AdminOnly(handlers.CreateMovie(moviesStorage))))
 	mux.HandleFunc("PUT /movies/{id}", middleware.AuthMiddleware(middleware.AdminOnly(handlers.UpdateMovie(moviesStorage))))
 	mux.HandleFunc("DELETE /movies/{id}", middleware.AuthMiddleware(middleware.AdminOnly(handlers.DeleteMovie(moviesStorage))))
 
-	// Актеры
+	// Актёры
 	mux.HandleFunc("GET /movies/{id}/actors", handlers.GetActorsByMovie(actorsStorage))
 	mux.HandleFunc("POST /actors", middleware.AuthMiddleware(middleware.AdminOnly(handlers.CreateActor(actorsStorage))))
 	mux.HandleFunc("PUT /actors/{id}", middleware.AuthMiddleware(middleware.AdminOnly(handlers.UpdateActor(actorsStorage))))
 	mux.HandleFunc("DELETE /actors/{id}", middleware.AuthMiddleware(middleware.AdminOnly(handlers.DeleteActor(actorsStorage))))
-	// Привязка актера к фильму
 	mux.HandleFunc("POST /movies/{id}/actors", middleware.AuthMiddleware(middleware.AdminOnly(handlers.AddActorToMovie(actorsStorage))))
 
 	// Бюджет и сборы

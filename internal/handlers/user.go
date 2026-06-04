@@ -7,58 +7,58 @@ import (
 	"miniKinopoisk/internal/storage"
 	"miniKinopoisk/internal/utils"
 	"net/http"
+
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
-type RegisterRequest struct {
+type authRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
 func Register(userStorage *storage.UserStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req RegisterRequest
+		var req authRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
 		if req.Email == "" || req.Password == "" {
-			http.Error(w, "email and password are required", http.StatusBadRequest)
+			http.Error(w, "Email and password are required", http.StatusBadRequest)
 			return
 		}
 
-		//пока что сохраняем без хеша
 		hash, err := utils.HashPassword(req.Password)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		_, err = userStorage.CreateUser(r.Context(), req.Email, hash)
-		if err != nil {
-			if err.Error() == `ERROR: duplicate key value violates unique constraint "user_email_key" (SQLSTATE 23505)` {
-				http.Error(w, "User with email already exists", http.StatusConflict)
-				return
-			}
-			log.Printf("Registration error: %v", err)
-			http.Error(w, "Database error", http.StatusInternalServerError)
+			log.Printf("HashPassword error: %v", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 
+		_, err = userStorage.CreateUser(r.Context(), req.Email, hash)
+		if err != nil {
+			if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == "23505" {
+				http.Error(w, "User with this email already exists", http.StatusConflict)
+				return
+			}
+			log.Printf("CreateUser error: %v", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(`{"message":"User created successfully!"}`))
+		json.NewEncoder(w).Encode(map[string]string{"message": "User created successfully"})
 	}
 }
 
 func Login(userStorage *storage.UserStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req struct {
-			Email    string `json:"email"`
-			Password string `json:"password"`
-		}
+		var req authRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
-
 		if req.Email == "" || req.Password == "" {
 			http.Error(w, "Email and password are required", http.StatusBadRequest)
 			return
@@ -77,13 +77,12 @@ func Login(userStorage *storage.UserStorage) http.HandlerFunc {
 
 		token, err := auth.GenerateToken(user.ID, user.Email, user.Role)
 		if err != nil {
-			http.Error(w, "Something went wrong", http.StatusInternalServerError)
+			log.Printf("GenerateToken error: %v", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{
-			"token": token,
-		})
+		json.NewEncoder(w).Encode(map[string]string{"token": token})
 	}
 }

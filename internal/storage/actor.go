@@ -2,12 +2,12 @@ package storage
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
-	"miniKinopoisk/internal/models"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"miniKinopoisk/internal/models"
 )
 
 type ActorStorage struct {
@@ -18,23 +18,23 @@ func NewActorStorage(db *pgxpool.Pool) *ActorStorage {
 	return &ActorStorage{db: db}
 }
 
+func timeToPgDate(t *time.Time) pgtype.Date {
+	if t == nil {
+		return pgtype.Date{Valid: false}
+	}
+	return pgtype.Date{Time: *t, Valid: true}
+}
+
 func (s *ActorStorage) CreateActor(ctx context.Context, firstName, lastName string, birthDate *time.Time, salary float64) (*models.Actor, error) {
 	query := `
-		insert into actors(first_name, last_name, birth_date, salary)
-		values ($1, $2, $3, $4)
-		returning id, first_name, last_name, birth_date, salary;
+		INSERT INTO actors(first_name, last_name, birth_date, salary)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, first_name, last_name, birth_date, salary;
 	`
-
 	var actor models.Actor
-	var bd sql.NullTime
+	var bd pgtype.Date
 
-	if birthDate != nil {
-		bd = sql.NullTime{Time: *birthDate, Valid: true}
-	} else {
-		bd = sql.NullTime{Valid: false}
-	}
-
-	err := s.db.QueryRow(ctx, query, firstName, lastName, bd, salary).Scan(
+	err := s.db.QueryRow(ctx, query, firstName, lastName, timeToPgDate(birthDate), salary).Scan(
 		&actor.ID,
 		&actor.FirstName,
 		&actor.LastName,
@@ -44,39 +44,37 @@ func (s *ActorStorage) CreateActor(ctx context.Context, firstName, lastName stri
 	if err != nil {
 		return nil, fmt.Errorf("failed to create actor: %w", err)
 	}
-
 	if bd.Valid {
 		actor.BirthDate = bd.Time
 	}
-
 	return &actor, nil
-
 }
 
 func (s *ActorStorage) GetActorsByMovie(ctx context.Context, movieID int) ([]*models.Actor, error) {
 	query := `
-		select a.id, a.first_name, a.last_name, a.birth_date, a.salary from actors a 
-		join movie_actor ma 
-		on a.id = ma.id_actor 
-		where ma.id_movie = $1;
-		`
+		SELECT a.id, a.first_name, a.last_name, a.birth_date, a.salary
+		FROM actors a
+		JOIN movie_actor ma ON a.id = ma.id_actor
+		WHERE ma.id_movie = $1;
+	`
 	rows, err := s.db.Query(ctx, query, movieID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get actors: %w", err)
 	}
 	defer rows.Close()
 
-	var actors []*models.Actor
+	actors := make([]*models.Actor, 0)
 	for rows.Next() {
 		var actor models.Actor
-		var bd sql.NullTime
+		var bd pgtype.Date
 		if err := rows.Scan(
 			&actor.ID,
 			&actor.FirstName,
 			&actor.LastName,
 			&bd,
-			&actor.Salary); err != nil {
-			return nil, fmt.Errorf("failed to scan actors: %w", err)
+			&actor.Salary,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan actor: %w", err)
 		}
 		if bd.Valid {
 			actor.BirthDate = bd.Time
@@ -87,8 +85,11 @@ func (s *ActorStorage) GetActorsByMovie(ctx context.Context, movieID int) ([]*mo
 }
 
 func (s *ActorStorage) AddActorToMovie(ctx context.Context, movieID, actorID int) error {
-	query := `insert into movie_actor (id_movie, id_actor)
-		values ($1, $2) on conflict (id_movie, id_actor) do nothing;`
+	query := `
+		INSERT INTO movie_actor (id_movie, id_actor)
+		VALUES ($1, $2)
+		ON CONFLICT (id_movie, id_actor) DO NOTHING;
+	`
 	_, err := s.db.Exec(ctx, query, movieID, actorID)
 	if err != nil {
 		return fmt.Errorf("failed to add actor to movie: %w", err)
@@ -98,14 +99,14 @@ func (s *ActorStorage) AddActorToMovie(ctx context.Context, movieID, actorID int
 
 func (s *ActorStorage) UpdateActor(ctx context.Context, id int, firstName, lastName string, birthDate *time.Time, salary float64) (*models.Actor, error) {
 	query := `
-		update actors
-		set first_name = $2, last_name = $3, birth_date = $4, salary = $5
-		where id = $1
-		returning id, first_name, last_name, birth_date, salary;
+		UPDATE actors
+		SET first_name = $2, last_name = $3, birth_date = $4, salary = $5
+		WHERE id = $1
+		RETURNING id, first_name, last_name, birth_date, salary;
 	`
 	var actor models.Actor
-	var bd sql.NullTime
-	err := s.db.QueryRow(ctx, query, id, firstName, lastName, birthDate, salary).Scan(
+	var bd pgtype.Date
+	err := s.db.QueryRow(ctx, query, id, firstName, lastName, timeToPgDate(birthDate), salary).Scan(
 		&actor.ID,
 		&actor.FirstName,
 		&actor.LastName,
@@ -117,14 +118,12 @@ func (s *ActorStorage) UpdateActor(ctx context.Context, id int, firstName, lastN
 	}
 	if bd.Valid {
 		actor.BirthDate = bd.Time
-	} else {
-		actor.BirthDate = time.Time{}
 	}
 	return &actor, nil
 }
 
 func (s *ActorStorage) DeleteActor(ctx context.Context, id int) error {
-	query := `delete from actors where id = $1;`
+	query := `DELETE FROM actors WHERE id = $1;`
 	_, err := s.db.Exec(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete actor: %w", err)

@@ -1,4 +1,4 @@
 server:
   port: "8080"
 database:
-  dsn: "host=localhost user=postgres password=2112 dbname=kinopoisk sslmode=disable"
+  dsn: "host=db user=postgres password=postgres dbname=kinopoisk sslmode=disable"

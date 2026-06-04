@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"fmt"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	"miniKinopoisk/internal/models"
 )
@@ -17,9 +18,9 @@ func NewMovieStorage(db *pgxpool.Pool) *MovieStorage {
 
 func (s *MovieStorage) CreateMovie(ctx context.Context, title, producer, director string, releaseYear int) (*models.Movie, error) {
 	query := `
-		insert into movies (title, producer, director, release_year)
-		values ($1, $2, $3, $4)
-		returning id, title, producer, director, release_year;
+		INSERT INTO movies (title, producer, director, release_year)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, title, producer, director, release_year;
 	`
 	var movie models.Movie
 	err := s.db.QueryRow(ctx, query, title, producer, director, releaseYear).Scan(
@@ -36,7 +37,7 @@ func (s *MovieStorage) CreateMovie(ctx context.Context, title, producer, directo
 }
 
 func (s *MovieStorage) GetMovies(ctx context.Context) ([]*models.Movie, error) {
-	query := `select * from movies;`
+	query := `SELECT id, title, producer, director, release_year FROM movies ORDER BY id;`
 	rows, err := s.db.Query(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get movies: %w", err)
@@ -60,15 +61,31 @@ func (s *MovieStorage) GetMovies(ctx context.Context) ([]*models.Movie, error) {
 	return movies, nil
 }
 
-func (s *MovieStorage) UpdateMovie(ctx context.Context, id int, title, producer, director string, release_year int) (*models.Movie, error) {
+func (s *MovieStorage) GetMovieByID(ctx context.Context, id int) (*models.Movie, error) {
+	query := `SELECT id, title, producer, director, release_year FROM movies WHERE id = $1;`
+	var movie models.Movie
+	err := s.db.QueryRow(ctx, query, id).Scan(
+		&movie.ID,
+		&movie.Title,
+		&movie.Producer,
+		&movie.Director,
+		&movie.ReleaseYear,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("movie %d not found: %w", id, err)
+	}
+	return &movie, nil
+}
+
+func (s *MovieStorage) UpdateMovie(ctx context.Context, id int, title, producer, director string, releaseYear int) (*models.Movie, error) {
 	query := `
-		update movies
-		set title = $2, producer = $3, director = $4, release_year = $5
-		where id = $1
-		returning id, title, producer, director, release_year;
+		UPDATE movies
+		SET title = $2, producer = $3, director = $4, release_year = $5
+		WHERE id = $1
+		RETURNING id, title, producer, director, release_year;
 	`
 	var movie models.Movie
-	err := s.db.QueryRow(ctx, query, id, title, producer, director, release_year).Scan(
+	err := s.db.QueryRow(ctx, query, id, title, producer, director, releaseYear).Scan(
 		&movie.ID,
 		&movie.Title,
 		&movie.Producer,
@@ -82,7 +99,7 @@ func (s *MovieStorage) UpdateMovie(ctx context.Context, id int, title, producer,
 }
 
 func (s *MovieStorage) DeleteMovie(ctx context.Context, id int) error {
-	query := `delete from movies where id = $1;`
+	query := `DELETE FROM movies WHERE id = $1;`
 	_, err := s.db.Exec(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete movie: %w", err)

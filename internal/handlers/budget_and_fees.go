@@ -8,39 +8,30 @@ import (
 	"strconv"
 )
 
-type createBudgetRequest struct {
-	IDMovie           int     `json:"id_movie"`
-	TotalBudget       float64 `json:"total_budget,omitempty"`
-	FeesInProdCountry float64 `json:"fees_in_prod_country,omitempty"`
-	FeesInOther       float64 `json:"fees_in_other,omitempty"`
+type budgetRequest struct {
+	TotalBudget       float64 `json:"total_budget"`
+	FeesInProdCountry float64 `json:"fees_in_prod_country"`
+	FeesInOther       float64 `json:"fees_in_other"`
 }
 
 func CreateBudget(budgetStorage *storage.BudgetStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		movieIDStr := r.PathValue("id")
-		if movieIDStr == "" {
-			http.Error(w, "Movie ID is required in URL", http.StatusBadRequest)
-			return
-		}
-		movieID, err := strconv.Atoi(movieIDStr)
+		movieID, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
-			http.Error(w, "Invalid movie ID in URL", http.StatusBadRequest)
-			return
-		}
-		var req createBudgetRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "Invalid movie ID", http.StatusBadRequest)
 			return
 		}
 
-		if req.IDMovie == 0 {
-			http.Error(w, "The movie id is required", http.StatusBadRequest)
+		var req budgetRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
 
 		budget, err := budgetStorage.CreateBudget(r.Context(), movieID, req.TotalBudget, req.FeesInProdCountry, req.FeesInOther)
 		if err != nil {
-			http.Error(w, "Something wend wrong "+err.Error(), http.StatusInternalServerError)
+			log.Printf("CreateBudget error: %v", err)
+			http.Error(w, "Failed to create budget", http.StatusInternalServerError)
 			return
 		}
 
@@ -52,20 +43,16 @@ func CreateBudget(budgetStorage *storage.BudgetStorage) http.HandlerFunc {
 
 func GetBudget(budgetStorage *storage.BudgetStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		movieIDStr := r.PathValue("id")
-		if movieIDStr == "" {
-			http.Error(w, "The movie id is required", http.StatusBadRequest)
+		movieID, err := strconv.Atoi(r.PathValue("id"))
+		if err != nil {
+			http.Error(w, "Invalid movie ID", http.StatusBadRequest)
 			return
 		}
 
-		movieID, err := strconv.Atoi(movieIDStr)
-		if err != nil {
-			http.Error(w, "Invalid actor ID", http.StatusBadRequest)
-			return
-		}
 		budget, err := budgetStorage.GetBudgetByMovie(r.Context(), movieID)
 		if err != nil {
-			http.Error(w, "Something wend wrong", http.StatusInternalServerError)
+			log.Printf("GetBudget error: %v", err)
+			http.Error(w, "Budget not found", http.StatusNotFound)
 			return
 		}
 
@@ -74,40 +61,24 @@ func GetBudget(budgetStorage *storage.BudgetStorage) http.HandlerFunc {
 	}
 }
 
-type updateBudgetRequest struct {
-	IDMovie           int     `json:"id_movie"`
-	TotalBudget       float64 `json:"total_budget,omitempty"`
-	FeesInProdCountry float64 `json:"fees_in_prod_country,omitempty"`
-	FeesInOther       float64 `json:"fees_in_other,omitempty"`
-}
-
 func UpdateBudgetByMovie(budgetStorage *storage.BudgetStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		movieIDStr := r.PathValue("id")
-		if movieIDStr == "" {
-			http.Error(w, "Movie ID is required", http.StatusBadRequest)
-			return
-		}
-		movieID, err := strconv.Atoi(movieIDStr)
+		movieID, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
 			http.Error(w, "Invalid movie ID", http.StatusBadRequest)
 			return
 		}
 
-		var req updateBudgetRequest
+		var req budgetRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, "Invalid request "+err.Error(), http.StatusBadRequest)
-			return
-		}
-		if req.IDMovie == 0 {
-			http.Error(w, "The Movie ID is required", http.StatusBadRequest)
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
 
 		budget, err := budgetStorage.UpdateBudgetByMovie(r.Context(), movieID, req.TotalBudget, req.FeesInProdCountry, req.FeesInOther)
 		if err != nil {
-			log.Printf("Something wend wrong, %v", err)
-			http.Error(w, "Error updating budget: "+err.Error(), http.StatusInternalServerError)
+			log.Printf("UpdateBudget error: %v", err)
+			http.Error(w, "Failed to update budget", http.StatusInternalServerError)
 			return
 		}
 
@@ -118,19 +89,15 @@ func UpdateBudgetByMovie(budgetStorage *storage.BudgetStorage) http.HandlerFunc 
 
 func DeleteBudget(budgetStorage *storage.BudgetStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		idStr := r.PathValue("id")
-		if idStr == "" {
-			http.Error(w, "Budget ID is required", http.StatusBadRequest)
-			return
-		}
-		id, err := strconv.Atoi(idStr)
+		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
 			http.Error(w, "Invalid budget ID", http.StatusBadRequest)
 			return
 		}
 
 		if err := budgetStorage.DeleteBudget(r.Context(), id); err != nil {
-			http.Error(w, "Error deleting budget", http.StatusInternalServerError)
+			log.Printf("DeleteBudget error: %v", err)
+			http.Error(w, "Failed to delete budget", http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
