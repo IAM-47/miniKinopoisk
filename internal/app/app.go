@@ -37,9 +37,11 @@ func (app *App) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /movies", middleware.AuthMiddleware(middleware.AdminOnly(handlers.CreateMovie(moviesStorage))))
 	mux.HandleFunc("PUT /movies/{id}", middleware.AuthMiddleware(middleware.AdminOnly(handlers.UpdateMovie(moviesStorage))))
 	mux.HandleFunc("DELETE /movies/{id}", middleware.AuthMiddleware(middleware.AdminOnly(handlers.DeleteMovie(moviesStorage))))
+	mux.HandleFunc("GET /actors/{id}/movies", handlers.GetMoviesByActor(moviesStorage))
 
 	// Актёры
 	mux.HandleFunc("GET /movies/{id}/actors", handlers.GetActorsByMovie(actorsStorage))
+	mux.HandleFunc("GET /actors/{id}", handlers.GetActorByID(actorsStorage))
 	mux.HandleFunc("POST /actors", middleware.AuthMiddleware(middleware.AdminOnly(handlers.CreateActor(actorsStorage))))
 	mux.HandleFunc("PUT /actors/{id}", middleware.AuthMiddleware(middleware.AdminOnly(handlers.UpdateActor(actorsStorage))))
 	mux.HandleFunc("DELETE /actors/{id}", middleware.AuthMiddleware(middleware.AdminOnly(handlers.DeleteActor(actorsStorage))))

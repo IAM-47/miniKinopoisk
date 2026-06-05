@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"miniKinopoisk/internal/models"
+
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"miniKinopoisk/internal/models"
 )
 
 type ActorStorage struct {
@@ -45,7 +46,8 @@ func (s *ActorStorage) CreateActor(ctx context.Context, firstName, lastName stri
 		return nil, fmt.Errorf("failed to create actor: %w", err)
 	}
 	if bd.Valid {
-		actor.BirthDate = bd.Time
+		t := bd.Time
+		actor.BirthDate = &t
 	}
 	return &actor, nil
 }
@@ -77,7 +79,8 @@ func (s *ActorStorage) GetActorsByMovie(ctx context.Context, movieID int) ([]*mo
 			return nil, fmt.Errorf("failed to scan actor: %w", err)
 		}
 		if bd.Valid {
-			actor.BirthDate = bd.Time
+			t := bd.Time
+			actor.BirthDate = &t
 		}
 		actors = append(actors, &actor)
 	}
@@ -117,7 +120,8 @@ func (s *ActorStorage) UpdateActor(ctx context.Context, id int, firstName, lastN
 		return nil, fmt.Errorf("failed to update actor: %w", err)
 	}
 	if bd.Valid {
-		actor.BirthDate = bd.Time
+		t := bd.Time
+		actor.BirthDate = &t
 	}
 	return &actor, nil
 }
@@ -129,4 +133,25 @@ func (s *ActorStorage) DeleteActor(ctx context.Context, id int) error {
 		return fmt.Errorf("failed to delete actor: %w", err)
 	}
 	return nil
+}
+
+func (s *ActorStorage) GetActorByID(ctx context.Context, id int) (*models.Actor, error) {
+	query := `SELECT id, first_name, last_name, birth_date, salary FROM actors WHERE id = $1;`
+	var actor models.Actor
+	var bd pgtype.Date
+	err := s.db.QueryRow(ctx, query, id).Scan(
+		&actor.ID,
+		&actor.FirstName,
+		&actor.LastName,
+		&bd,
+		&actor.Salary,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("Actor %d not found: %w", id, err)
+	}
+	if bd.Valid {
+		t := bd.Time
+		actor.BirthDate = &t
+	}
+	return &actor, nil
 }

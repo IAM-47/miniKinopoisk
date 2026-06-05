@@ -107,3 +107,33 @@ func (s *MovieStorage) DeleteMovie(ctx context.Context, id int) error {
 	}
 	return nil
 }
+
+func (s *MovieStorage) GetMoviesByActor(ctx context.Context, actorID int) ([]*models.Movie, error) {
+	query := `
+		SELECT m.id, m.title, m.producer, m.director, m.release_year
+		FROM movies m 
+		JOIN movie_actor ma ON m.id = ma.id_movie
+		WHERE ma.id_actor = $1;
+	`
+	rows, err := s.db.Query(ctx, query, actorID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get actors: %w", err)
+	}
+	defer rows.Close()
+
+	movies := make([]*models.Movie, 0)
+	for rows.Next() {
+		var movie models.Movie
+		if err := rows.Scan(
+			&movie.ID,
+			&movie.Title,
+			&movie.Producer,
+			&movie.Director,
+			&movie.ReleaseYear,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan actor: %w", err)
+		}
+		movies = append(movies, &movie)
+	}
+	return movies, nil
+}

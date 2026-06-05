@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"miniKinopoisk/internal/app"
+	"miniKinopoisk/internal/middleware"
 	"miniKinopoisk/pkg/config"
 	"net/http"
 	"os"
@@ -34,7 +35,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:    ":" + cfg.Server.Port,
-		Handler: mux,
+		Handler: middleware.CORS(mux),
 	}
 
 	go func() {

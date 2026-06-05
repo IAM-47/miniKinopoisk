@@ -166,3 +166,24 @@ func DeleteActor(actorStorage *storage.ActorStorage) http.HandlerFunc {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
+
+func GetActorByID(actorStorage *storage.ActorStorage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		idStr := r.PathValue("id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			http.Error(w, "Invalid actor ID", http.StatusBadRequest)
+			return
+		}
+
+		actor, err := actorStorage.GetActorByID(r.Context(), id)
+		if err != nil {
+			log.Printf("GetActorByID error: %v", err)
+			http.Error(w, "Actor not found", http.StatusNotFound)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(actor)
+	}
+}

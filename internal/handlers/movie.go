@@ -135,3 +135,24 @@ func DeleteMovie(movieStorage *storage.MovieStorage) http.HandlerFunc {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
+
+func GetMoviesByActor(movieStorage *storage.MovieStorage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		actorIDStr := r.PathValue("id")
+		actorID, err := strconv.Atoi(actorIDStr)
+		if err != nil {
+			http.Error(w, "Invalid actor ID", http.StatusBadRequest)
+			return
+		}
+
+		movies, err := movieStorage.GetMoviesByActor(r.Context(), actorID)
+		if err != nil {
+			log.Printf("GetMoviesByACtor error: %v", err)
+			http.Error(w, "Failed to get movies", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(movies)
+	}
+}
