@@ -1,0 +1,684 @@
+openapi: 3.0.3
+info:
+  title: miniKinopoisk API
+  version: 1.0.0
+  description: |
+    REST API для каталога фильмов с актёрами и финансовой статистикой.
+
+    Защищённые методы требуют заголовок `Authorization: Bearer <token>`.
+    Токен выдаёт `POST /login`. Методы, помеченные «admin», доступны только
+    пользователям с ролью `admin`.
+
+    Ошибки возвращаются как `text/plain` с коротким описанием причины.
+servers:
+  - url: http://localhost:8080
+    description: Локальный запуск (docker-compose)
+tags:
+  - name: system
+  - name: users
+  - name: movies
+  - name: actors
+  - name: budget
+
+paths:
+  /:
+    get:
+      tags: [system]
+      summary: Health-check и версия
+      responses:
+        "200":
+          description: Сервис работает
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+
+  /register:
+    post:
+      tags: [users]
+      summary: Регистрация пользователя
+      description: Новый пользователь получает роль `user`. Пароль хранится как bcrypt-хеш.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Credentials"
+      responses:
+        "201":
+          description: Пользователь создан
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User created successfully
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          description: Пользователь с таким email уже существует
+          content:
+            text/plain:
+              schema:
+                type: string
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /login:
+    post:
+      tags: [users]
+      summary: Вход, возвращает JWT
+      description: Токен действует 24 часа. Для неверного email и неверного пароля возвращается одинаковая ошибка.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Credentials"
+      responses:
+        "200":
+          description: Успешный вход
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token]
+                properties:
+                  token:
+                    type: string
+                    description: JWT (HS256)
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          description: Неверный email или пароль
+          content:
+            text/plain:
+              schema:
+                type: string
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /users/{email}:
+    delete:
+      tags: [users]
+      summary: Удалить пользователя по email (admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+            format: email
+      responses:
+        "204":
+          description: Пользователь удалён
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /movies:
+    get:
+      tags: [movies]
+      summary: Список фильмов с пагинацией
+      parameters:
+        - name: limit
+          in: query
+          description: Сколько записей вернуть. Некорректное или неположительное значение заменяется на 10.
+          schema:
+            type: integer
+            minimum: 1
+            default: 10
+        - name: offset
+          in: query
+          description: Сколько записей пропустить. Некорректное или отрицательное значение заменяется на 0.
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        "200":
+          description: Список фильмов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Movie"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      tags: [movies]
+      summary: Создать фильм (admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MovieInput"
+      responses:
+        "201":
+          description: Фильм создан
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Movie"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /movies/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [movies]
+      summary: Фильм по ID
+      responses:
+        "200":
+          description: Фильм найден
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Movie"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [movies]
+      summary: Обновить фильм (admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MovieInput"
+      responses:
+        "200":
+          description: Фильм обновлён
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Movie"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      tags: [movies]
+      summary: Удалить фильм (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Фильм удалён
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /movies/{id}/actors:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [actors]
+      summary: Актёры фильма
+      responses:
+        "200":
+          description: Список актёров
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Actor"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      tags: [actors]
+      summary: Привязать актёра к фильму (admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [actor_id]
+              properties:
+                actor_id:
+                  type: integer
+                  minimum: 1
+                  example: 1
+      responses:
+        "201":
+          description: Связь создана
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /movies/{id}/budget:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [budget]
+      summary: Бюджет и сборы фильма
+      responses:
+        "200":
+          description: Бюджет найден
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Budget"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [budget]
+      summary: Добавить бюджет фильму (admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BudgetInput"
+      responses:
+        "201":
+          description: Бюджет создан
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Budget"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    put:
+      tags: [budget]
+      summary: Обновить бюджет фильма (admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BudgetInput"
+      responses:
+        "200":
+          description: Бюджет обновлён
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Budget"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /budget/{id}:
+    delete:
+      tags: [budget]
+      summary: Удалить запись о бюджете (admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Запись удалена
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /actors:
+    post:
+      tags: [actors]
+      summary: Создать актёра (admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActorInput"
+      responses:
+        "201":
+          description: Актёр создан
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Actor"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /actors/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [actors]
+      summary: Актёр по ID
+      responses:
+        "200":
+          description: Актёр найден
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Actor"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [actors]
+      summary: Обновить актёра (admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActorInput"
+      responses:
+        "200":
+          description: Актёр обновлён
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Actor"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      tags: [actors]
+      summary: Удалить актёра (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Актёр удалён
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /actors/{id}/movies:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [movies]
+      summary: Фильмы с участием актёра
+      responses:
+        "200":
+          description: Список фильмов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Movie"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+        example: 1
+
+  responses:
+    BadRequest:
+      description: Некорректное тело запроса, ID или пропущены обязательные поля
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: Invalid request body
+    Unauthorized:
+      description: Нет заголовка Authorization, неверный формат или токен недействителен / просрочен
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: Invalid authorization token
+    Forbidden:
+      description: Роль пользователя не `admin`
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: "Access denied: admin only"
+    NotFound:
+      description: Запись не найдена
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: Movie not found
+    InternalError:
+      description: Внутренняя ошибка сервера
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: Internal server error
+
+  schemas:
+    Health:
+      type: object
+      properties:
+        app:
+          type: string
+          example: miniKinopoisk API
+        version:
+          type: string
+          example: 1.0.0
+        status:
+          type: string
+          example: ok
+        go:
+          type: string
+          example: go1.25.5
+
+    Credentials:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: secret
+
+    Movie:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Inception
+        producer:
+          type: string
+          example: Emma Thomas
+        director:
+          type: string
+          example: Christopher Nolan
+        release_year:
+          type: integer
+          example: 2010
+
+    MovieInput:
+      type: object
+      required: [title, producer, director]
+      properties:
+        title:
+          type: string
+          example: Inception
+        producer:
+          type: string
+          example: Emma Thomas
+        director:
+          type: string
+          example: Christopher Nolan
+        release_year:
+          type: integer
+          example: 2010
+
+    Actor:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        first_name:
+          type: string
+          example: Leonardo
+        last_name:
+          type: string
+          example: DiCaprio
+        birth_date:
+          type: string
+          format: date-time
+          description: Поле отсутствует, если дата рождения не задана
+          example: "1974-11-11T00:00:00Z"
+        salary:
+          type: number
+          example: 20000000
+
+    ActorInput:
+      type: object
+      required: [first_name, last_name]
+      properties:
+        first_name:
+          type: string
+          example: Leonardo
+        last_name:
+          type: string
+          example: DiCaprio
+        birth_date:
+          type: string
+          format: date
+          description: Формат `yyyy-mm-dd`
+          example: "1974-11-11"
+        salary:
+          type: number
+          example: 20000000
+
+    Budget:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        id_movie:
+          type: integer
+          example: 1
+        total_budget:
+          type: number
+          description: Поле отсутствует, если значение равно нулю
+          example: 160000000
+        fees_in_prod_country:
+          type: number
+          description: Поле отсутствует, если значение равно нулю
+          example: 292576195
+        fees_in_other:
+          type: number
+          description: Поле отсутствует, если значение равно нулю
+          example: 543000000
+
+    BudgetInput:
+      type: object
+      properties:
+        total_budget:
+          type: number
+          example: 160000000
+        fees_in_prod_country:
+          type: number
+          example: 292576195
+        fees_in_other:
+          type: number
+          example: 543000000

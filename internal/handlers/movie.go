@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"log"
-	"miniKinopoisk/internal/storage"
 	"net/http"
 	"strconv"
 )
@@ -15,7 +14,7 @@ type movieRequest struct {
 	ReleaseYear int    `json:"release_year,omitempty"`
 }
 
-func CreateMovie(movieStorage *storage.MovieStorage) http.HandlerFunc {
+func CreateMovie(movieStorage MovieStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req movieRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -40,7 +39,7 @@ func CreateMovie(movieStorage *storage.MovieStorage) http.HandlerFunc {
 	}
 }
 
-func GetMovies(movieStorage *storage.MovieStorage) http.HandlerFunc {
+func GetMovies(movieStorage MovieStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		limit := 10
 		offset := 0
@@ -66,7 +65,7 @@ func GetMovies(movieStorage *storage.MovieStorage) http.HandlerFunc {
 	}
 }
 
-func GetMovieByID(movieStorage *storage.MovieStorage) http.HandlerFunc {
+func GetMovieByID(movieStorage MovieStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
 		id, err := strconv.Atoi(idStr)
@@ -87,7 +86,7 @@ func GetMovieByID(movieStorage *storage.MovieStorage) http.HandlerFunc {
 	}
 }
 
-func UpdateMovie(movieStorage *storage.MovieStorage) http.HandlerFunc {
+func UpdateMovie(movieStorage MovieStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
 		id, err := strconv.Atoi(idStr)
@@ -118,7 +117,7 @@ func UpdateMovie(movieStorage *storage.MovieStorage) http.HandlerFunc {
 	}
 }
 
-func DeleteMovie(movieStorage *storage.MovieStorage) http.HandlerFunc {
+func DeleteMovie(movieStorage MovieStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
 		id, err := strconv.Atoi(idStr)
@@ -136,7 +135,7 @@ func DeleteMovie(movieStorage *storage.MovieStorage) http.HandlerFunc {
 	}
 }
 
-func GetMoviesByActor(movieStorage *storage.MovieStorage) http.HandlerFunc {
+func GetMoviesByActor(movieStorage MovieStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		actorIDStr := r.PathValue("id")
 		actorID, err := strconv.Atoi(actorIDStr)

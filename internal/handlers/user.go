@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"miniKinopoisk/internal/auth"
-	"miniKinopoisk/internal/storage"
 	"miniKinopoisk/internal/utils"
 	"net/http"
 	"strings"
@@ -17,7 +16,7 @@ type authRequest struct {
 	Password string `json:"password"`
 }
 
-func Register(userStorage *storage.UserStorage) http.HandlerFunc {
+func Register(userStorage UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req authRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -58,7 +57,7 @@ func Register(userStorage *storage.UserStorage) http.HandlerFunc {
 	}
 }
 
-func Login(userStorage *storage.UserStorage) http.HandlerFunc {
+func Login(userStorage UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req authRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -93,7 +92,7 @@ func Login(userStorage *storage.UserStorage) http.HandlerFunc {
 	}
 }
 
-func DeleteUserByEmail(userStorage *storage.UserStorage) http.HandlerFunc {
+func DeleteUserByEmail(userStorage UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		email := r.PathValue("email")
 		if email == "" {

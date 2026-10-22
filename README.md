@@ -1,10 +1,12 @@
 # miniKinopoisk
 
+[![CI](https://github.com/IAM-47/miniKinopoisk/actions/workflows/ci.yml/badge.svg)](https://github.com/IAM-47/miniKinopoisk/actions/workflows/ci.yml)
+
 REST API для каталога фильмов с актёрами и финансовой статистикой. Написан на Go без фреймворков — только стандартная библиотека, pgx и JWT.
 
 ## Стек
 
-- **Go 1.23** — net/http (стандартный роутер)
+- **Go 1.25** — net/http (стандартный роутер)
 - **PostgreSQL 16** — pgx/v5 (без ORM)
 - **JWT** — аутентификация / авторизация
 - **Docker / docker-compose** — развёртывание
@@ -52,6 +54,7 @@ docker-compose up --build
 |-------|-----|----------|
 | POST | `/register` | Регистрация |
 | POST | `/login` | Вход, возвращает JWT-токен |
+| DELETE | `/users/{email}` | Удалить пользователя (admin) |
 
 **Тело запроса (register / login):**
 ```json
@@ -77,11 +80,12 @@ Authorization: Bearer <token>
 
 | Метод | URL | Доступ | Описание |
 |-------|-----|--------|----------|
-| GET | `/movies` | публичный | Список всех фильмов |
+| GET | `/movies` | публичный | Список фильмов (`?limit=10&offset=0`) |
 | GET | `/movies/{id}` | публичный | Фильм по ID |
 | POST | `/movies` | admin | Создать фильм |
 | PUT | `/movies/{id}` | admin | Обновить фильм |
 | DELETE | `/movies/{id}` | admin | Удалить фильм |
+| GET | `/actors/{id}/movies` | публичный | Фильмы с участием актёра |
 
 **Тело (POST / PUT):**
 ```json
@@ -100,6 +104,7 @@ Authorization: Bearer <token>
 | Метод | URL | Доступ | Описание |
 |-------|-----|--------|----------|
 | GET | `/movies/{id}/actors` | публичный | Актёры фильма |
+| GET | `/actors/{id}` | публичный | Актёр по ID |
 | POST | `/actors` | admin | Создать актёра |
 | PUT | `/actors/{id}` | admin | Обновить актёра |
 | DELETE | `/actors/{id}` | admin | Удалить актёра |
@@ -139,6 +144,39 @@ Authorization: Bearer <token>
   "fees_in_other": 543000000
 }
 ```
+
+---
+
+## Документация API (OpenAPI / Swagger)
+
+Спецификация OpenAPI 3.0 лежит в [`docs/openapi.yaml`](docs/openapi.yaml): все 20 эндпоинтов, схемы запросов и ответов, коды ошибок, JWT-авторизация.
+
+Посмотреть в браузере через Swagger UI:
+
+```bash
+docker run --rm -p 8081:8080 -e SWAGGER_JSON=/spec/openapi.yaml \
+  -v "$(pwd)/docs:/spec" swaggerapi/swagger-ui
+```
+
+После запуска откройте `http://localhost:8081`. Кнопка **Authorize** принимает токен из `POST /login`, после этого можно вызывать admin-методы прямо из интерфейса. Либо вставьте содержимое файла на [editor.swagger.org](https://editor.swagger.org).
+
+## Тесты и CI
+
+Тесты не требуют базы данных: хендлеры зависят от небольших интерфейсов хранилищ (`internal/handlers/stores.go`), в тестах вместо PostgreSQL используются подменные реализации.
+
+```bash
+go test ./...                 # все тесты
+go test -race -cover ./...    # с детектором гонок и покрытием
+```
+
+Что покрыто:
+
+- **auth** — выдача JWT, срок жизни 24 часа, отказ при неверном секрете
+- **middleware** — проверка токена (нет заголовка, неверная схема, мусор, просрочен, чужая подпись, `alg=none`), цепочка `AuthMiddleware → AdminOnly`, CORS и preflight
+- **utils** — bcrypt-хеширование паролей (соль, неверный пароль, битый хеш)
+- **handlers** — все обработчики: валидация входных данных, коды ответов 2xx/4xx/5xx, пагинация, конфликт при дубле email, одинаковая ошибка для неверного email и пароля
+
+GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) на каждый push в `main` и каждый pull request запускает: проверку `gofmt`, `go vet`, тесты с `-race` и покрытием, сборку Docker-образа и валидацию `docs/openapi.yaml`.
 
 ---
 

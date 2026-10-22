@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"log"
-	"miniKinopoisk/internal/storage"
 	"net/http"
 	"strconv"
 	"time"
@@ -27,7 +26,7 @@ func parseBirthDate(raw *string) (*time.Time, error) {
 	return &t, nil
 }
 
-func CreateActor(actorStorage *storage.ActorStorage) http.HandlerFunc {
+func CreateActor(actorStorage ActorStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req actorRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -58,7 +57,7 @@ func CreateActor(actorStorage *storage.ActorStorage) http.HandlerFunc {
 	}
 }
 
-func GetActorsByMovie(actorStorage *storage.ActorStorage) http.HandlerFunc {
+func GetActorsByMovie(actorStorage ActorStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		movieIDStr := r.PathValue("id")
 		movieID, err := strconv.Atoi(movieIDStr)
@@ -83,7 +82,7 @@ type addActorToMovieRequest struct {
 	ActorID int `json:"actor_id"`
 }
 
-func AddActorToMovie(actorStorage *storage.ActorStorage) http.HandlerFunc {
+func AddActorToMovie(actorStorage ActorStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		movieIDStr := r.PathValue("id")
 		movieID, err := strconv.Atoi(movieIDStr)
@@ -112,7 +111,7 @@ func AddActorToMovie(actorStorage *storage.ActorStorage) http.HandlerFunc {
 	}
 }
 
-func UpdateActor(actorStorage *storage.ActorStorage) http.HandlerFunc {
+func UpdateActor(actorStorage ActorStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
 		id, err := strconv.Atoi(idStr)
@@ -149,7 +148,7 @@ func UpdateActor(actorStorage *storage.ActorStorage) http.HandlerFunc {
 	}
 }
 
-func DeleteActor(actorStorage *storage.ActorStorage) http.HandlerFunc {
+func DeleteActor(actorStorage ActorStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
 		id, err := strconv.Atoi(idStr)
@@ -167,7 +166,7 @@ func DeleteActor(actorStorage *storage.ActorStorage) http.HandlerFunc {
 	}
 }
 
-func GetActorByID(actorStorage *storage.ActorStorage) http.HandlerFunc {
+func GetActorByID(actorStorage ActorStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
 		id, err := strconv.Atoi(idStr)

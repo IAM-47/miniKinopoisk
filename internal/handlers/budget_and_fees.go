@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"log"
-	"miniKinopoisk/internal/storage"
 	"net/http"
 	"strconv"
 )
@@ -14,7 +13,7 @@ type budgetRequest struct {
 	FeesInOther       float64 `json:"fees_in_other"`
 }
 
-func CreateBudget(budgetStorage *storage.BudgetStorage) http.HandlerFunc {
+func CreateBudget(budgetStorage BudgetStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		movieID, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
@@ -41,7 +40,7 @@ func CreateBudget(budgetStorage *storage.BudgetStorage) http.HandlerFunc {
 	}
 }
 
-func GetBudget(budgetStorage *storage.BudgetStorage) http.HandlerFunc {
+func GetBudget(budgetStorage BudgetStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		movieID, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
@@ -61,7 +60,7 @@ func GetBudget(budgetStorage *storage.BudgetStorage) http.HandlerFunc {
 	}
 }
 
-func UpdateBudgetByMovie(budgetStorage *storage.BudgetStorage) http.HandlerFunc {
+func UpdateBudgetByMovie(budgetStorage BudgetStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		movieID, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
@@ -87,7 +86,7 @@ func UpdateBudgetByMovie(budgetStorage *storage.BudgetStorage) http.HandlerFunc 
 	}
 }
 
-func DeleteBudget(budgetStorage *storage.BudgetStorage) http.HandlerFunc {
+func DeleteBudget(budgetStorage BudgetStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
